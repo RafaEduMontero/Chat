@@ -3,10 +3,30 @@ const cors = require('cors');
 const app = express();
 const authRoutes = require('./routes/authRoutes');
 const cookieParser = require('cookie-parser');
-app.use(cors());
+
+const whitelist = ['http://localhost:3000', 'http://192.168.1.12:3000']
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+}
+
+// var corsOptions = {
+//     origin: 'http://localhost:3000',
+//     credentials: true,
+//     optionsSuccessStatus: 200 // For legacy browser support
+// }
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(authRoutes);
 app.use(cookieParser());
+app.use(authRoutes);
+
 const http = require('http').Server(app);
 const mongoose = require('mongoose');
 const socketio = require('socket.io');
@@ -78,6 +98,6 @@ io.on('connection', (socket) => {
   })
 });
 
-http.listen(PORT, () => {
+http.listen(PORT,'0.0.0.0', () => {
   console.log(`Listening on port ${PORT}`);
 });
